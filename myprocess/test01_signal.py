@@ -1,6 +1,7 @@
 # coding=utf8
 import os
 import time
+import signal
 #python2 + linux
 # Only works on Unix/Linux/Mac:
 
@@ -37,7 +38,43 @@ def test02():
             print 'Hello from parent ', os.getpid(), pid  #1
             pass
 
+def task(i):
+    print 'work %d' % i
+def test03():
+    var = 10
+    pid = os.fork()
+    if pid == 0:
+        var = 9
+        print 'i am child(%s), var=%s' % (os.getpid(), var)
+    else:
+        time.sleep(100)
+        print 'i am father, var=', var
+
+def chldhandler(signum, stackframe):
+    while 1:
+        try:
+            result = os.waitpid(-1, os.WNOHANG)
+        except:
+            break
+        print 'Reaped child process %d' % result[0]
+    signal.signal(signal.SIGCHLD, chldhandler)
+def test04():
+    signal.signal(signal.SIGCHLD, chldhandler)
+    print 'Before the fork my pid =',os.getpid()
+    pid = os.fork()
+    if pid:
+        print 'from the parent the child pid =',pid
+        print 'parent sleep 100s'
+        time.sleep(100)
+        print 'sleep done'
+    else:
+        print 'child sleep 5s'
+        time.sleep(5)
+
+
 if __name__ == '__main__':
     #test01()
-    test02()
+    #test02()
+    #test03()
+    test04()
 
